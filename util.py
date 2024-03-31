@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import json
-import sys
 
 def read_json_file(file_path):
     """
@@ -14,10 +12,18 @@ def read_json_file(file_path):
     list: A list of dictionaries containing mempool data.
     """
     try:
-        with open(file_path, "r") as mempool_data:
-            return json.load(mempool_data)
+        with open(file_path, "r") as estimates_data:
+            data = json.load(estimates_data)
+            # Convert relevant values to integers
+            for entry in data:
+                entry["block_height"] = int(float(entry["block_height"]))
+                entry["mempool_fee_rate_estimate"] = int(float(entry["mempool_fee_rate_estimate"]) / 1000) # Convert from sat/kvB to sat/vB
+                entry["block_fee_rate_estimate"] = int(float(entry["block_fee_rate_estimate"]) / 1000) # Convert from sat/kvB to sat/vB
+                entry[".05"] = int(float(entry[".05"]))
+                entry[".75"] = int(float(entry[".75"]))
+            return data
     except Exception as e:
-        print(f"Failed to load mempool txs from {file_path}: {e}")
+        print(f"Failed to load estimates data from {file_path}: {e}")
         return []
 
 def plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile):
@@ -60,7 +66,7 @@ def plot_estimates(start, end, data):
         print(f"Blocks exceeded maximum threshold of {MAX_THRESHOLD} Blocks")
         return
     
-    if start < 0 or end >= int(float(data[len(data) -1]["block_height"])):
+    if start < 0 or end >= data[-1]["block_height"]:
         print("Invalid range")
         return
 
@@ -70,17 +76,13 @@ def plot_estimates(start, end, data):
     low_percentile = [] 
     high_percentile = []
 
-    i = 0
-    while(i < len(data) and end >= int(float(data[i]["block_height"]))):
-        blk_height = int(float(data[i]["block_height"]))
-        if start >= blk_height:
-            block_heights.append(int(float(data[i]["block_height"])))
-            mempool_estimates.append(int(float(data[i]["mempool_fee_rate_estimate"]) / 1000))
-            blockpolicy_estimates.append(int(float(data[i]["block_fee_rate_estimate"]) / 1000))
-            low_percentile.append(int(float(data[i][".05"])))
-            high_percentile.append(int(float(data[i][".75"])))
-            start+=1
-        i+=1
+    for entry in data:
+        blk_height = entry["block_height"]
+        if start <= blk_height <= end:
+            block_heights.append(blk_height)
+            mempool_estimates.append(entry["mempool_fee_rate_estimate"])
+            blockpolicy_estimates.append(entry["block_fee_rate_estimate"])
+            low_percentile.append(entry[".05"])
+            high_percentile.append(entry[".75"])
 
     plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile)
-
