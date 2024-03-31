@@ -32,7 +32,7 @@ def plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_perce
     high_percentile (list): List of high percentile values.
     """
     plt.style.use('ggplot')
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(15, 15))
 
     ax.fill_between(block_heights, low_percentile, high_percentile, alpha=.5, linewidth=0, color='grey')
     ax.plot(block_heights, blockpolicy_estimates, linewidth=2, color='yellow', label='Block Policy Estimates')
