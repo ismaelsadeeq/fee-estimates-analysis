@@ -86,3 +86,29 @@ def plot_estimates(start, end, data):
             high_percentile.append(entry[".75"])
 
     plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile)
+
+
+def get_summary(data):
+    total = len(data)
+    underpaid_estimates = 0
+    overpaid_estimates = 0
+    estimates_within_range = 0
+    
+    for row in data:
+        if row["mempool_fee_rate_estimate"] > row[".75"]:
+            overpaid_estimates += 1
+        elif row["mempool_fee_rate_estimate"] < row[".05"]:
+            underpaid_estimates += 1
+        else:
+            estimates_within_range += 1
+    
+    overpaid_percentage = (overpaid_estimates / total) * 100
+    underpaid_percentage = (underpaid_estimates / total) * 100
+    within_range_percentage = (estimates_within_range / total) * 100
+    
+    print(f"{overpaid_estimates} Estimates overpaid {overpaid_percentage:.2f}% of the total estimates")
+    print(f"{underpaid_estimates} Estimates underpaid {underpaid_percentage:.2f}% of the total estimates")
+    print(f"{estimates_within_range} Estimates are within the range {within_range_percentage:.2f}% of the total estimates")
+
+    
+        
