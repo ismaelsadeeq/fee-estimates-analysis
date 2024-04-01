@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import json
 
+from datetime import datetime
+
 def read_json_file(file_path):
     """
     Reads mempool data from a JSON file.
@@ -87,28 +89,41 @@ def plot_estimates(start, end, data):
 
     plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile)
 
+def calculate_percentages(data, key):
+    total = len(data)
+    if total == 0:
+        return [(0, 0), (0, 0), (0, 0)]
+    underpaid = sum(1 for row in data if row[key] < row[".05"])
+    overpaid = sum(1 for row in data if row[key] > row[".75"])
+    within_range = total - underpaid - overpaid
+    arr = []
+    arr.append((overpaid, (overpaid / total * 100)))
+    arr.append((underpaid, (underpaid / total * 100)))
+    arr.append((within_range, (within_range / total * 100)))
+    return arr
+
+def print_summary(data, key):
+    arr = calculate_percentages(data, key)
+    for category, (count, percentage) in zip(["overpaid", "underpaid", "are within the range"], arr):
+        print(f"{count} estimates {category} {percentage:.2f}% of the total estimates ")
 
 def get_summary(data):
     total = len(data)
-    underpaid_estimates = 0
-    overpaid_estimates = 0
-    estimates_within_range = 0
+    if total == 0:
+        return
     
-    for row in data:
-        if row["mempool_fee_rate_estimate"] > row[".75"]:
-            overpaid_estimates += 1
-        elif row["mempool_fee_rate_estimate"] < row[".05"]:
-            underpaid_estimates += 1
-        else:
-            estimates_within_range += 1
-    
-    overpaid_percentage = (overpaid_estimates / total) * 100
-    underpaid_percentage = (underpaid_estimates / total) * 100
-    within_range_percentage = (estimates_within_range / total) * 100
-    
-    print(f"{overpaid_estimates} Estimates overpaid {overpaid_percentage:.2f}% of the total estimates")
-    print(f"{underpaid_estimates} Estimates underpaid {underpaid_percentage:.2f}% of the total estimates")
-    print(f"{estimates_within_range} Estimates are within the range {within_range_percentage:.2f}% of the total estimates")
+    start_time = datetime.fromisoformat(data[0]['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+    end_time = datetime.fromisoformat(data[-1]['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+    start_block = data[0]['prev_block_height']
+    end_block = data[-1]['prev_block_height']
+
+    print(f"Total of {total} estimates were made from {start_time} to {end_time} from Block {start_block} to Block {end_block}")
+    print("---------------------------------------------------------")
+    print("CBlockPolicyEstimator estimatesmartfee economic mode with confirmation target 1")
+    print_summary(data, "block_fee_rate_estimate")
+    print("---------------------------------------------------------")
+    print("Mempool estimate for next block")
+    print_summary(data, "mempool_fee_rate_estimate")
 
     
         
