@@ -28,7 +28,7 @@ def read_json_file(file_path):
         print(f"Failed to load estimates data from {file_path}: {e}")
         return []
 
-def plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile):
+def plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile, logscale_yaxis):
     """
     Plots mempool data.
 
@@ -52,9 +52,11 @@ def plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_perce
     plt.xlabel("Block Height", fontsize=10, fontweight='bold')
     plt.ylabel("Fee Estimates", fontsize=10, fontweight='bold')
     plt.legend()
+    if logscale_yaxis:
+        ax.set_yscale('log')
     plt.show()
 
-def plot_estimates(start, end, data):
+def plot_estimates(start, end, data, logscale_yaxis=False):
     """
     Plots fee estimates.
 
@@ -87,7 +89,7 @@ def plot_estimates(start, end, data):
             low_percentile.append(entry[".05"])
             high_percentile.append(entry[".75"])
 
-    plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile)
+    plot_data(block_heights, mempool_estimates, blockpolicy_estimates, low_percentile, high_percentile, logscale_yaxis)
 
 def calculate_percentages(data, key):
     total = len(data)
