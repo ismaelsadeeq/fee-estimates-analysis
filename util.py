@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 
-def read_json_file(file_path, BitcoindThreshold):
+def read_json_file(file_path):
     """
     Reads estimates data from a JSON file.
 
@@ -30,25 +30,12 @@ def read_json_file(file_path, BitcoindThreshold):
                 }
                 for entry in data if 'conservative_fee_rate' in entry and 'p_5' in entry
             ]
-            if BitcoindThreshold:
-                for data in new_data:
-                    if data["high"] > data["economic_fee_rate"]:
-                        data["high"] = data["economic_fee_rate"]
-                    if data["low"] > data["economic_fee_rate"]:
-                        data["low"] = data["economic_fee_rate"]
-                    
-                    # if data["high"] > data["conservative_fee_rate"]:
-                    #     data["high"] = data["conservative_fee_rate"]
-                    # if data["low"] > data["conservative_fee_rate"]:
-                    #     data["low"] = data["conservative_fee_rate"]
-            
             return new_data
     except Exception as e:
         print(f"Failed to load estimates data from {file_path}: {e}")
         return []
 
-def plot_data(forecaster, block_heights, low_priority_estimates, high_priority_estimates, 
-              conservative_estimates, economic_estimates, low_percentile, high_percentile, logscale_yaxis):
+def plot_data(forecaster, block_heights, conservative_estimates, economic_estimates, low_percentile, high_percentile, logscale_yaxis):
     """
     Plots estimates data.
 
@@ -65,14 +52,12 @@ def plot_data(forecaster, block_heights, low_priority_estimates, high_priority_e
     plt.style.use('ggplot')
     fig, ax = plt.subplots(figsize=(15, 15))
 
-    ax.fill_between(block_heights, low_percentile, high_percentile, alpha=.5, linewidth=0, color='grey', label='5th to 50th percentile')
-    ax.plot(block_heights, high_priority_estimates, linewidth=2, color='yellow', label=f'{forecaster} high')
-    ax.plot(block_heights, low_priority_estimates, linewidth=2, color='blue', label=f'{forecaster} Low')
+    ax.fill_between(block_heights, low_percentile, high_percentile, alpha=.5, linewidth=0, color='grey', label='5th to 50th percentile target block fee rate')
     ax.plot(block_heights, economic_estimates, linewidth=2, color='green', label='Bitcoind Economic')
     ax.plot(block_heights, conservative_estimates, linewidth=2, color='red', label='Bitcoind Conservative')
 
-    plt.title("Estimators against the block 5th percentile to 75th percentile fee rate", loc="left", fontsize=12, fontstyle='italic')
-    plt.suptitle("With confirmation target 1", y=0.92, fontsize=10, fontweight='bold')
+    plt.title("Bitcoind conservative v economic estimate", loc="left", fontsize=12, fontstyle='italic')
+    plt.suptitle("With confirmation target (1, 2)", y=0.92, fontsize=10, fontweight='bold')
 
     plt.xlabel("Block Height", fontsize=10, fontweight='bold')
     plt.ylabel("Fee Estimates", fontsize=10, fontweight='bold')
@@ -110,15 +95,12 @@ def plot_estimates(start, end, data, forecaster, logscale_yaxis=False):
         if start <= entry["block_height"] <= end and entry["forecaster"] == forecaster
     ]
     block_heights = [entry["block_height"] for entry in filtered_data]
-    low_priority_estimates = [entry["low"] for entry in filtered_data]
-    high_priority_estimates = [entry["high"] for entry in filtered_data]
     conservative_estimates = [entry["conservative_fee_rate"] for entry in filtered_data]
     economic_estimates = [entry["economic_fee_rate"] for entry in filtered_data]
     low_percentile = [entry["p_5"] for entry in filtered_data]
     high_percentile = [entry["p_50"] for entry in filtered_data]
 
-    plot_data(forecaster, block_heights, low_priority_estimates, high_priority_estimates,
-              conservative_estimates, economic_estimates, low_percentile, high_percentile, logscale_yaxis)
+    plot_data(forecaster, block_heights, conservative_estimates, economic_estimates, low_percentile, high_percentile, logscale_yaxis)
 
 
 def calculate_percentages(data, key):
@@ -154,14 +136,6 @@ def get_summary(data, forecaster):
     end_block = int(filtered_data[-1]['block_height']) - 1
 
     print(f"Total of {total} estimates were made from {start_time} to {end_time} from Block {start_block} to Block {end_block}")
-    print("---------------------------------------------------------")
-    print("Low priority estimates")
-    print_summary(filtered_data, "low")
-
-    print("---------------------------------------------------------")
-    print("High priority estimate")
-    print_summary(filtered_data, "high")
-
     print("---------------------------------------------------------")
     print("Bitcoind conservative estimate")
     print_summary(filtered_data, "conservative_fee_rate")

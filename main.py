@@ -6,8 +6,8 @@ Mempool = "Mempool Forecast"
 LastBlock = "Last Block Forecast"
 Last6Blocks = "Block Forecast"
 
-data = read_json_file(file_dir, BitcoindThreshold=False)
+data = read_json_file(file_dir)
 
-plot_estimates(846887, 847087, data, forecaster=Mempool, logscale_yaxis=True)
+plot_estimates(846887, 847087, data, forecaster=Mempool, logscale_yaxis=False)
 
-get_summary(data, forecaster=Mempool)
+get_summary(data, forecaster=Last6Blocks)
