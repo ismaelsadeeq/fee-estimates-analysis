@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 
-def read_json_file(file_path, BitcoindThreshold):
+def read_json_file(file_path, BitcoindThreshold, mode):
     """
     Reads estimates data from a JSON file.
 
@@ -32,16 +32,11 @@ def read_json_file(file_path, BitcoindThreshold):
             ]
             if BitcoindThreshold:
                 for data in new_data:
-                    if data["high"] > data["economic_fee_rate"]:
-                        data["high"] = data["economic_fee_rate"]
-                    if data["low"] > data["economic_fee_rate"]:
-                        data["low"] = data["economic_fee_rate"]
+                    if data["high"] > data[mode]:
+                        data["high"] = data[mode]
+                    if data["low"] > data[mode]:
+                        data["low"] = data[mode]
                     
-                    # if data["high"] > data["conservative_fee_rate"]:
-                    #     data["high"] = data["conservative_fee_rate"]
-                    # if data["low"] > data["conservative_fee_rate"]:
-                    #     data["low"] = data["conservative_fee_rate"]
-            
             return new_data
     except Exception as e:
         print(f"Failed to load estimates data from {file_path}: {e}")
