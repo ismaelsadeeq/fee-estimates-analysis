@@ -59,7 +59,7 @@ def read_json_file(file_path, BitcoindThreshold=False, mode=Conservative):
         print(f"Failed to load estimates data from {file_path}: {e}")
         return []
 
-def plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels):
+def plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels, colors):
     """
     Plots estimates data.
 
@@ -73,11 +73,11 @@ def plot_data(block_heights, estimates_dict, low_percentile, high_percentile, lo
     """
     plt.style.use('ggplot')
     fig, ax = plt.subplots(figsize=(15, 15))
-
-    ax.fill_between(block_heights, low_percentile, high_percentile, alpha=.5, linewidth=0, color='grey', label='5th to 50th percentile')
     
     for key, values in estimates_dict.items():
-        ax.plot(block_heights, values, linewidth=2, label=labels[key])
+        ax.plot(block_heights, values, linewidth=2, alpha=0.6, color=colors[key], label=labels[key])
+
+    ax.fill_between(block_heights, low_percentile, high_percentile, alpha=1, linewidth=0, color='grey', label='5th to 50th percentile')
 
     plt.title("Estimators against the block 5th percentile to 50th percentile fee rate", loc="left", fontsize=12, fontstyle='italic')
     plt.suptitle("With confirmation target 1", y=0.92, fontsize=10, fontweight='bold')
@@ -150,11 +150,15 @@ def plot_mempool_estimates(start, end, data, logscale_yaxis=False):
         "mempool_last_10_low": mempool_last_10_low_estimates
     }
     labels = {
-        "mempool_high": "Mempool High Estimates",
-        "mempool_last_10_low": "Mempool Last 10 Min Low Estimates"
+        "mempool_high": "Mempool High priority",
+        "mempool_last_10_low": "Mempool Last 10 Min Low priority"
     }
 
-    plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels)
+    colors = {
+        "mempool_high": "yellow",
+        "mempool_last_10_low": "blue"
+    }
+    plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels, colors)
 
 def plot_forecaster_estimates(start, end, data, forecaster, logscale_yaxis=False):
     """
@@ -192,13 +196,20 @@ def plot_forecaster_estimates(start, end, data, forecaster, logscale_yaxis=False
     }
 
     labels = {
-        "high_priority": "High Priority Estimates",
-        "low_priority": "Low Priority Estimates",
+        "high_priority": f"{forecaster} High Priority",
+        "low_priority": f"{forecaster} Low Priority",
         "conservative": "Bitcoind Conservative",
         "economic": "Bitcoind Economic"
     }
 
-    plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels)
+    colors = {
+        "high_priority": "yellow",
+        "low_priority": "blue",
+        "conservative": "green",
+        "economic": "red"
+    }    
+
+    plot_data(block_heights, estimates_dict, low_percentile, high_percentile, logscale_yaxis, labels, colors)
 
 def calculate_percentages(data, key):
     total = len(data)
